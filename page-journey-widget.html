@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>How a Page Reaches Your Browser</title>
+<style>
+  html,body{margin:0;padding:16px;font-family:'Segoe UI',Tahoma,Verdana,sans-serif;background:transparent;}
+  .wwjourney-node {
+    position: absolute; top: 50%; transform: translate(-50%, -50%);
+    text-align: center; opacity: 0.35; transition: opacity 0.4s, transform 0.4s; min-width: 60px;
+  }
+  .wwjourney-node.active { opacity: 1; transform: translate(-50%, -50%) scale(1.12); }
+  .wwjourney-dot { width: 10px; height: 10px; border-radius: 50%; background: #cbd5e1; transition: background 0.3s, transform 0.3s; }
+  .wwjourney-dot.active { background: #3b82f6; transform: scale(1.3); }
+  @keyframes wwjourney-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+  #wwjourney-go:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(59,130,246,0.4); }
+  #wwjourney-reset:hover { background: #e2e8f0; }
+</style>
+</head>
+<body>
+
+<div id="wwjourney" style="max-width:640px;margin:0 auto;background:linear-gradient(135deg,#f8fafc,#e2e8f0); border:2px solid #cbd5e1; border-radius:14px; padding:14px;">
+
+    <div style="display:flex; gap:8px; align-items:center; margin-bottom:12px;">
+        <div style="flex:1; display:flex; align-items:center; gap:8px; padding:9px 14px; background:white; border:2px solid #cbd5e1; border-radius:24px; font-family:'JetBrains Mono',monospace; font-size:13px; min-height:18px;">
+            <span style="color:#64748b;">🔒</span>
+            <span id="wwjourney-url" style="color:#1e293b;"></span><span id="wwjourney-cursor" style="color:#3b82f6; animation:wwjourney-blink 1s infinite;">|</span>
+        </div>
+        <button id="wwjourney-go" onclick="wwjourneyAdvance();" style="padding:9px 18px; background:linear-gradient(135deg,#3b82f6,#1d4ed8); color:white; border:none; border-radius:8px; font-weight:600; cursor:pointer; font-size:13px; transition:all 0.2s;">▶ Start</button>
+        <button id="wwjourney-reset" onclick="wwjourneyReset();" style="padding:9px 14px; background:#f1f5f9; color:#475569; border:1px solid #cbd5e1; border-radius:8px; font-weight:600; cursor:pointer; font-size:13px;">↻ Reset</button>
+    </div>
+
+    <div style="position:relative; height:115px; background:white; border-radius:10px; padding:8px; overflow:hidden;">
+        <div style="position:absolute; top:50%; left:9%; right:9%; height:3px; background:#e2e8f0; border-radius:2px;"></div>
+
+        <div id="wwjourney-node-1" class="wwjourney-node" style="left:8%;">
+            <div style="font-size:30px;">👤</div>
+            <div style="font-weight:700; color:#1e40af; font-size:11px;">Browser</div>
+        </div>
+        <div id="wwjourney-node-2" class="wwjourney-node" style="left:36%;">
+            <div style="font-size:30px;">📒</div>
+            <div style="font-weight:700; color:#5b21b6; font-size:11px;">DNS</div>
+        </div>
+        <div id="wwjourney-node-3" class="wwjourney-node" style="left:64%;">
+            <div style="font-size:30px;">⚙️</div>
+            <div style="font-weight:700; color:#14532d; font-size:11px;">Server</div>
+        </div>
+        <div id="wwjourney-node-4" class="wwjourney-node" style="left:92%;">
+            <div style="font-size:30px;">🖼️</div>
+            <div style="font-weight:700; color:#9d174d; font-size:11px;">Page</div>
+        </div>
+
+        <div id="wwjourney-packet" style="position:absolute; top:25%; left:8%; transform:translate(-50%,-50%); padding:4px 10px; background:#3b82f6; color:white; border-radius:14px; font-size:11px; font-weight:700; transition:left 1.1s ease, opacity 0.3s; opacity:0; white-space:nowrap; box-shadow:0 4px 12px rgba(59,130,246,0.4); z-index:5;">📦</div>
+    </div>
+
+    <div id="wwjourney-status" style="text-align:center; padding:9px; margin-top:10px; background:white; border-radius:8px; font-size:13px; color:#475569; font-weight:600; min-height:18px;">
+        Click <strong>▶ Start</strong> to watch a request travel through the web
+    </div>
+
+    <div style="display:flex; justify-content:center; gap:8px; margin-top:8px;">
+        <div class="wwjourney-dot" id="wwjourney-dot-1"></div>
+        <div class="wwjourney-dot" id="wwjourney-dot-2"></div>
+        <div class="wwjourney-dot" id="wwjourney-dot-3"></div>
+        <div class="wwjourney-dot" id="wwjourney-dot-4"></div>
+        <div class="wwjourney-dot" id="wwjourney-dot-5"></div>
+    </div>
+
+    <div id="wwjourney-result" style="display:none; margin-top:10px; background:white; border:2px solid #db2777; border-radius:10px; overflow:hidden; animation:wwjourney-blink 0.5s ease;">
+        <div style="background:#f1f5f9; padding:6px 10px; display:flex; gap:5px; align-items:center; border-bottom:1px solid #e2e8f0;">
+            <div style="width:9px; height:9px; border-radius:50%; background:#ef4444;"></div>
+            <div style="width:9px; height:9px; border-radius:50%; background:#f59e0b;"></div>
+            <div style="width:9px; height:9px; border-radius:50%; background:#22c55e;"></div>
+            <div style="margin-left:8px; font-family:monospace; font-size:11px; color:#64748b;">www.mygym.com/members</div>
+        </div>
+        <div style="padding:14px; text-align:center;">
+            <h3 style="margin:0 0 6px 0; color:#1976d2; font-size:18px;">Welcome to My Gym 🏋️</h3>
+            <p style="margin:0; color:#475569; font-size:13px;">Member Area · 234 active members today</p>
+        </div>
+    </div>
+</div>
+
+<script>
+(function() {
+    var URL_TEXT = "https://www.mygym.com/members";
+    var state = 0;
+    var typingInterval = null;
+
+    var phases = [
+        { msg: "1️⃣ <strong>You type a URL</strong> and press Enter — request begins",
+          run: function() { typeUrl(); activateNodes(1); showPacket(8, "URL"); } },
+        { msg: "2️⃣ <strong>DNS Lookup</strong> — mygym.com → 142.250.190.78 (like a phonebook 📒)",
+          run: function() { activateNodes(2); movePacket(36, "🔍 mygym.com?"); } },
+        { msg: "3️⃣ <strong>HTTP Request</strong> — Browser asks the server: GET /members",
+          run: function() { activateNodes(3); movePacket(64, "📤 GET /members"); } },
+        { msg: "4️⃣ <strong>HTTP Response</strong> — Server replies: 200 OK + HTML payload",
+          run: function() { movePacket(8, "📥 200 OK + HTML"); } },
+        { msg: "5️⃣ <strong>Browser Renders</strong> — the page appears on your screen! 🎉",
+          run: function() {
+              activateNodes(4);
+              movePacket(92, "✨", true);
+              document.getElementById("wwjourney-result").style.display = "block";
+          } }
+    ];
+
+    function typeUrl() {
+        var urlEl = document.getElementById("wwjourney-url");
+        urlEl.textContent = "";
+        var i = 0;
+        if (typingInterval) clearInterval(typingInterval);
+        typingInterval = setInterval(function() {
+            if (i < URL_TEXT.length) { urlEl.textContent += URL_TEXT.charAt(i); i++; }
+            else { clearInterval(typingInterval); typingInterval = null; }
+        }, 28);
+    }
+
+    function activateNodes(upTo) {
+        for (var i = 1; i <= 4; i++) {
+            var el = document.getElementById("wwjourney-node-" + i);
+            if (el) el.classList.toggle("active", i <= upTo);
+        }
+    }
+
+    function showPacket(leftPercent, text) {
+        var p = document.getElementById("wwjourney-packet");
+        p.style.left = leftPercent + "%"; p.textContent = text; p.style.opacity = "1";
+    }
+
+    function movePacket(leftPercent, text, fadeOutAfter) {
+        var p = document.getElementById("wwjourney-packet");
+        p.style.opacity = "1"; p.style.left = leftPercent + "%"; p.textContent = text;
+        if (fadeOutAfter) { setTimeout(function() { p.style.opacity = "0"; }, 1200); }
+    }
+
+    window.wwjourneyAdvance = function() {
+        if (state >= 5) return;
+        state++;
+        var phase = phases[state - 1];
+        document.getElementById("wwjourney-status").innerHTML = phase.msg;
+        phase.run();
+        document.getElementById("wwjourney-dot-" + state).classList.add("active");
+        var btn = document.getElementById("wwjourney-go");
+        if (state === 5) {
+            btn.textContent = "✓ Done"; btn.disabled = true; btn.style.opacity = "0.5"; btn.style.cursor = "not-allowed";
+        } else { btn.textContent = "▶ Next Step"; }
+    };
+
+    window.wwjourneyReset = function() {
+        state = 0;
+        if (typingInterval) { clearInterval(typingInterval); typingInterval = null; }
+        document.getElementById("wwjourney-url").textContent = "";
+        document.getElementById("wwjourney-status").innerHTML = 'Click <strong>▶ Start</strong> to watch a request travel through the web';
+        var p = document.getElementById("wwjourney-packet");
+        p.style.opacity = "0"; p.style.left = "8%"; p.textContent = "📦";
+        for (var i = 1; i <= 4; i++) document.getElementById("wwjourney-node-" + i).classList.remove("active");
+        for (var i = 1; i <= 5; i++) document.getElementById("wwjourney-dot-" + i).classList.remove("active");
+        document.getElementById("wwjourney-result").style.display = "none";
+        var btn = document.getElementById("wwjourney-go");
+        btn.textContent = "▶ Start"; btn.disabled = false; btn.style.opacity = "1"; btn.style.cursor = "pointer";
+    };
+})();
+</script>
+
+</body>
+</html>
